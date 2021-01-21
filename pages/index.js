@@ -1,41 +1,44 @@
 import Head from 'next/head'
-import { useState, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styles from '../styles/Home.module.css'
 
 export default function Home() {
-    const [ data, setData ] = useState([]);
-    const getProduct = useRef('');
-    const getTotal = useRef('');
-    let showItem = null;
+    const [ dataApi, setDataApi ] = useState([]);
+    let showResult = null;
 
-    const onSubmit = (e) => {
-        e.preventDefault();
-        console.log('>>>> onSubmit !!! : ',data);
-        console.log('>>> producto ingresado : ',getProduct.current.value);
-        console.log('>>> total ingresado : ',getTotal.current.value);
-
-        setData([...data, {
-            id: data.length,
-            product: getProduct.current.value,
-            total: getTotal.current.value,
-        }]);
-
-        setTimeout(() => {
-            getProduct.current.value = '';
-            getTotal.current.value = '';
-        },100)
-    }
-
-    if( data && Object.keys(data) && Object.keys(data).length ){
-        showItem = data.map(( item, key ) => {
-            return (
-                <article className="list-item" key={`itemList-${key}`}>
-                    <h3>{item.product}</h3>
-                    <label>{item.total}</label>
+    const LIMIT = 10;
+    const OFFSET = 0;
+    //const URL_LIST = `/pokemon?limit=${LIMIT}&offset=${OFFSET}`;
+    const URL_DETAIL = '/pokemon/6/';
+    
+    useEffect(() => {
+        fetch(`${process.env.API_BASE}${URL_DETAIL}`)
+            .then(res => res.json())
+            .then(data => setDataApi(data));
+    },[ setDataApi ]);
+    
+    useMemo(() => {
+        if( dataApi && Object.keys(dataApi) && Object.keys(dataApi).length ){
+            showResult = (
+                <article>
+                    <figure>
+                        <img 
+                            className="photo-pokemon"
+                            src={dataApi.sprites.other.dream_world.front_default}
+                            alt={dataApi.name} 
+                            title={dataApi.name}/>
+                    </figure>
+                    <figcaption>
+                        <span>{`id : ${dataApi.id}`}</span><br></br>
+                        <span>{`nombre : ${dataApi.name}`}</span><br></br>
+                        <span>{`altura : ${dataApi.height}`}</span><br></br>
+                        <span>{`peso : ${dataApi.weight}`}</span>
+                        
+                    </figcaption>
                 </article>
             )
-        });
-    }
+        }
+    }, [ dataApi ]);
 
     return (
         <div className={styles.container}>
@@ -46,19 +49,11 @@ export default function Home() {
 
             <main className={styles.main}>
                 <h1 className={styles.title}> React Hooks </h1>
-
                 <p className={styles.description}> practical example </p>
 
                 <div className={styles.grid}>
                     <div className={styles.card}>
-                        <form onSubmit={onSubmit}>
-                            <input type="text" placeholder="ingrese un producto" ref={getProduct}/>
-                            <input type="text" placeholder="ingrese una cantidad" ref={getTotal}/>
-                            <button>agregar</button>
-                        </form>
-                    </div>
-                    <div className={styles.card}>
-                        { showItem || 'no hay data' }
+                        { showResult || 'no hay data' }
                     </div>
                 </div>
             </main>
